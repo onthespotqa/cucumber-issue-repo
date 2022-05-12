@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "lib": [
+      "dom",
+      "es6",
+      "es2017"
+    ],
+    "noEmit": true,
+    "skipLibCheck": true,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "noImplicitThis": false,
+    "alwaysStrict": false,
+    "resolveJsonModule": true,
+    "baseUrl": "./",
+    "esModuleInterop": true
+  },
+  "include": [
+    "**/*.ts", "plugins/configure-quarantine.ts",
+  ]
+}

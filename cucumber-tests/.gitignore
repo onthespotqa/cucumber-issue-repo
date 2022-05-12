@@ -1,0 +1,5 @@
+/.env.circleci
+/.env.cypress
+/cypress/integration/test.feature
+/cypress/integration/seed_demo.feature
+/cypress/integration/signatures/test.feature

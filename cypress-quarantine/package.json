@@ -1,0 +1,16 @@
+{
+  "name": "cypress-quarantine",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Cypress before-each hook that skips tests based on a JSON manifest. Works with Mocha or Cucumber.",
+  "scripts": {
+    "lint": "run-p -c lint:compliance lint:types",
+    "lint:fix": "eslint --fix './**/*.[jt]s*(x)'",
+    "lint:compliance": "eslint --quiet './**/*.[jt]s*(x)'",
+    "lint:types": "tsc"
+  },
+  "dependencies": {
+    "@badeball/cypress-cucumber-preprocessor": "*",
+    "cypress": "*"
+  }
+}

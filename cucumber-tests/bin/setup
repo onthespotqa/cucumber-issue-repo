@@ -1,0 +1,81 @@
+#! /bin/bash -e
+
+# Set some docker-related params
+export DOCKER_CLIENT_TIMEOUT=120
+export COMPOSE_HTTP_TIMEOUT=120
+
+# Include shared code
+source `dirname "$0"`/../../cypress-docker.lib.sh
+source `dirname "$0"`/../../prompt.lib.sh
+source `dirname "$0"`/../../retry_loop.lib.sh
+# Set dummy, unused UI_VERSION to squelch Composer errors.
+
+# Options to override the prompts when in dev
+while getopts ":ds:h:" option; do
+  case $option in
+    d) # -d Accept all defaults (head sha, localhost)
+      export SHA=$(git log -1 --format=%H HEAD);
+      export GP_ORIGIN_URL="http://localhost:3000";;
+    h) # -h Enter host
+      export GP_ORIGIN_URL=$OPTARG;;
+    s) # -s Enter a sha
+      export SHA=$OPTARG;;
+  esac
+done
+
+export UI_VERSION=unused
+
+  echo '***'
+  echo '*** DEVELOPMENT MODE (CI is missing from environment)'
+  echo '***  - reproduces a CI-like environment on developer laptop'
+  echo '***  - binds api to localhost:3000'
+  echo ''
+
+  prompt_optional SHA "Git commit to test" `git log -1 --format=%H HEAD`
+  prompt_optional GP_ORIGIN_URL "Apparent GP origin" "http://localhost:3000"
+
+  compose_file_args="-f docker-compose.yml -f docker-compose-development.yml"
+
+# See if we provided a PREVIOUS image label.
+# => A simple "deploy at A, try to deploy to B including migrations and test against the result" setup
+# 1) We will recreate the db/schema + migrate + add seeds from the PREVIOUS_SHA
+# 2) The main api comes up with SHA label, no data recreation but starts with migrating.
+if [ -z "$PREVIOUS_SHA" ]; then
+  export PREVIOUS_SHA=$SHA
+fi
+
+echo '***'
+echo '*** Wiping container state from previous test runs.'
+echo '***'
+echo ''
+# Create empty files
+echo '' > .env.circleci
+echo '' > .env.cypress
+
+docker-compose down  -v
+
+echo ''
+echo '***'
+echo '*** Pulling service images'
+echo '***'
+retry_loop docker-compose $compose_file_args pull
+
+# Standup DB
+echo '***'
+echo "*** Bringing up the api and it's dependencies"
+echo '***'
+echo ''
+
+docker compose $compose_file_args up -d api
+
+echo ''
+echo '*** WHAT NEXT?'
+echo '***   - override Cypress defaults using shell environment:'
+echo "***        - export GP_ORIGIN_URL=$GP_ORIGIN_URL"
+echo '***   - `yarn start` to run Cypress on the host'
+echo '***        - pay attention to warnings about unset secrets!'
+echo '***   - for cross-origin troubleshooting:'
+echo '***     - specify custom apparent URLs below (hack /etc/hosts first)'
+echo '***     - re-export custom apparent URLs for use by Cypress'
+echo '***'
+echo ''
